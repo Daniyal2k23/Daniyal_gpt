@@ -1,38 +1,36 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-client = OpenAI()
+# Set the OpenAI API key directly
+openai.api_key = "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"
 
 st.title("My Own ChatGPT!🤖")
 
+# Initialize the session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-
+# Display chat history
 for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# initialize model
+# Initialize model
 if "model" not in st.session_state:
-    st.session_state.model = "gpt-4o-mini"
+    st.session_state.model = "gpt-4"
 
-# user input
+# User input
 if user_prompt := st.chat_input("Your prompt"):
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
-    # generate responses
+    # Generate responses
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
 
-        stream = client.chat.completions.create(
+        stream = openai.ChatCompletion.create(
             model=st.session_state.model,
             messages=[
                 {"role": m["role"], "content": m["content"]}
@@ -41,8 +39,8 @@ if user_prompt := st.chat_input("Your prompt"):
             stream=True,
         )
         for chunk in stream:
-            token = chunk.choices[0].delta.content
-            if token is not None:
+            token = chunk.choices[0].delta.get("content", "")
+            if token:
                 full_response += token
                 message_placeholder.markdown(full_response + "▌")
 
